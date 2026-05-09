@@ -1,0 +1,6 @@
+openinnai-venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+reports/
