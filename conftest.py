@@ -49,6 +49,13 @@ def page(context, base_url):
     page.close()
 
 
+@pytest.fixture(scope="function")
+def api_context(playwright, base_url):
+    context = playwright.request.new_context(base_url=base_url)
+    yield context
+    context.dispose()
+
+
 # ==== Reporting ====
 
 
@@ -60,7 +67,6 @@ def pytest_runtest_makereport(item):
     if report.when == "call" and report.failed:
         timestamp = int(time.time() * 1000)
         page = item.funcargs.get("page")
-        second_page = item.funcargs.get("second_page")
 
         screenshot_dir = os.path.join(os.getcwd(), "reports/screenshots")
         os.makedirs(screenshot_dir, exist_ok=True)

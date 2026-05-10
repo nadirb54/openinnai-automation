@@ -1,4 +1,3 @@
-import re
 from playwright.sync_api import Page, expect
 from pages.base_page import BasePage
 
@@ -6,10 +5,8 @@ from pages.base_page import BasePage
 class HomePage(BasePage):
     def __init__(self, page: Page):
         self.page = page
-        self.request_demo_button = page.locator(
-            "(//span[text() = 'Request a demo'])[2]"
-        )
-        self.learn_more_button = page.locator("//span[text() = 'Learn More']")
+        self.request_demo_button = page.get_by_text("Request a demo").nth(1)
+        self.learn_more_button = page.get_by_text("Learn more")
 
     def is_home_page_displayed(self) -> bool:
         try:
