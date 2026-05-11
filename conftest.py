@@ -37,7 +37,13 @@ def context(browser, pytestconfig):
     viewport = resolution_map.get(resolution, resolution_map["desktop"])
 
     context = browser.new_context(viewport=viewport)
+    context.tracing.start(screenshots=True, snapshots=True, sources=True)
     yield context
+
+    try:
+        context.tracing.stop()
+    except Exception:
+        pass
     context.close()
 
 
@@ -73,8 +79,9 @@ def pytest_runtest_makereport(item):
 
         if page:
             try:
+                # Screenshot
                 screenshot_path = os.path.join(
-                    screenshot_dir, f"{item.name}_page1_{timestamp}.png"
+                    screenshot_dir, f"{item.name}_{timestamp}.png"
                 )
                 context = page.context
                 pages = context.pages
@@ -82,16 +89,27 @@ def pytest_runtest_makereport(item):
                 target.screenshot(path=screenshot_path)
                 allure.attach(
                     open(screenshot_path, "rb").read(),
-                    name="Page 1 Screenshot",
+                    name="Screenshot",
                     attachment_type=allure.attachment_type.PNG,
                 )
+
+                # Trace
+                trace_dir = os.path.join(os.getcwd(), "reports/traces")
+                os.makedirs(trace_dir, exist_ok=True)
+                trace_path = os.path.join(trace_dir, f"{item.name}_{timestamp}.zip")
+                context.tracing.stop(path=trace_path)
+                allure.attach.file(
+                    trace_path,
+                    name="Playwright Trace",
+                    attachment_type=allure.attachment_type.ZIP,
+                )
+
             except Exception as e:
-                print(f"[Screenshot] Failed for page1: {e}")
+                print(f"[Reporting] Failed: {e}")
 
 
 @pytest.hookimpl()
 def pytest_sessionstart(session):
-    # With xdist, only run on the controller process, not on workers
     if getattr(session.config, "workerinput", None) is not None:
         return
 
